@@ -1,0 +1,126 @@
+---
+title: "gt and reactable examples"
+output:
+  html_notebook: default
+---
+
+# The `gt` package for static tables
+
+The `gt` package is a brilliant new R package for building static tables. `gt` gives you a ton of flexibility in how you build your table, and works well with the `tidyverse`. You can learn more about `gt` at [gt.rstudio.com](https://gt.rstudio.com/).
+
+
+```{r setup, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, comment = NA)
+
+library(gt)
+library(tidyquant)
+library(timetk)
+library(tidyverse)
+```
+
+
+Let's look at an example using some stock data. We'll use the `tidyquant` package to load some stock data and calculate returns. For this example, we'll use the FAANG stocks.
+
+```{r}
+symbols <- c("FB", "AAPL", "AMZN", "NFLX", "GOOG")
+
+prices <- symbols %>% 
+  tq_get(get = "stock.prices", from = "2011-01-01") %>% 
+  group_by(symbol) %>% 
+  arrange(date)
+
+prices
+```
+
+Next, let's calculate our daily returns for each stock. We'll filter by date to just last week, and use this table for printing.
+
+```{r}
+stock_table <- prices %>% 
+  tq_mutate(adjusted, periodReturn, period = "daily", col_rename = "returns") %>% 
+  filter_by_time(date, "2021-01-11", "2021-01-15") %>% 
+  select(symbol, date, adjusted, returns, volume) %>%
+  arrange(date, symbol)
+
+stock_table
+```
+
+Finally, let's assemble our `gt` table and set a few options.
+
+```{r}
+stock_table %>% 
+  gt() %>% 
+  tab_header(
+    title = md("**FAANG** Stock Performance"),
+    subtitle = glue::glue("{min(stock_table$date)} to {max(stock_table$date)}")
+  ) %>% 
+  fmt_date(
+    columns = vars(date),
+    date_style = 3
+  ) %>% 
+  fmt_currency(
+    columns = vars(adjusted)
+  ) %>% 
+  fmt_percent(
+    columns = vars(returns)
+  ) %>% 
+  fmt_number(
+    columns = vars(volume),
+    suffixing = TRUE
+  ) %>% 
+  tab_options(
+   row_group.background.color  = "#fffcad"
+  ) %>% 
+  data_color(
+    columns = vars(returns),
+    colors = scales::col_numeric(
+      palette = c("#ff1100", "#ffffff", "#00ff00"),
+      domain = c(-.05, .05)
+    )
+  ) %>% 
+  tab_footnote(
+    footnote = md("Data from [Yahoo Finance](https://finance.yahoo.com/) via the [tidyquant](https://business-science.github.io/tidyquant/) R package."),
+    locations = cells_column_labels(columns = vars(adjusted))
+  ) %>% 
+  tab_options(
+    table.width = pct(90)
+  )
+```
+
+
+# The `reactable` package for interactive tables
+
+The [`reactable`](https://glin.github.io/reactable/index.html) package leverages the React and React Table libraries to allow you to build extremely customizable, highly interactive tables.
+
+Reactable provides a ton of nice interactivity "for free", but really shines if you know some CSS and JavaScript.
+
+Let's look at our same stock table, but make it interactive with reactable.
+
+```{r}
+stock_table %>%
+  reactable(groupBy = "symbol",
+            sortable = TRUE,     # sort by columns? defaults to true
+            resizable = TRUE,    # resizable columns?
+            borderless = FALSE,  # remove inner borders?
+            outlined = TRUE,     # add an outer border?
+            striped = TRUE,      # zebra striping for rows
+            filterable = TRUE,   # enable column filtering
+            searchable = TRUE,   # enable global table searching?
+            highlight = TRUE,    # highlight table rows on hover?
+            pagination = TRUE,  # whether to paginate rows
+            columns = list(
+                    adjusted = colDef(format = colFormat(currency = "USD")),
+                    returns = colDef(format = colFormat(percent = TRUE, digits = 2)),
+                    volume = colDef(aggregate = "sum", format = colFormat(digits = 0))),
+            details = function(index){
+              htmltools::div(
+                "The adjusted closing price for ", stock_table[index, ]$symbol, " on ", stock_table[index, ]$date, " was $", round(stock_table[index, ]$adjusted, 2), ", representing a ", round(stock_table[index, ]$returns*100, 2), "% change from the previous value."
+              )
+            },
+            defaultColDef = colDef(footer = function(values) {
+              if (!is.numeric(values)) return()
+              sparkline(values)
+              })
+  )
+```
+
+To learn more, check out some of the demos at https://glin.github.io/reactable/index.html.
