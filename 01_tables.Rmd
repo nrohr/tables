@@ -16,6 +16,7 @@ library(gt)
 library(reactable)
 library(tidyverse)
 library(tidyquant)
+library(timetk)
 ```
 
 
