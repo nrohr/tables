@@ -96,6 +96,20 @@ Reactable provides a ton of nice interactivity "for free", but really shines if 
 Let's look at our same stock table, but make it interactive with reactable.
 
 ```{r}
+options(reactable.theme = reactableTheme( # here is a dark theme
+  color = "hsl(233, 9%, 87%)",
+  backgroundColor = "hsl(233, 9%, 19%)",
+  borderColor = "hsl(233, 9%, 22%)",
+  stripedColor = "hsl(233, 12%, 22%)",
+  highlightColor = "hsl(233, 12%, 24%)",
+  inputStyle = list(backgroundColor = "hsl(233, 9%, 25%)"),
+  selectStyle = list(backgroundColor = "hsl(233, 9%, 25%)"),
+  pageButtonHoverStyle = list(backgroundColor = "hsl(233, 9%, 25%)"),
+  pageButtonActiveStyle = list(backgroundColor = "hsl(233, 9%, 28%)")
+))
+
+# options(reactable.theme = NULL) # run this to go back to default theme
+
 stock_table %>%
   reactable(groupBy = "symbol",
             sortable = TRUE,     # sort by columns? defaults to true
