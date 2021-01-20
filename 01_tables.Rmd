@@ -77,9 +77,8 @@ stock_table %>%
       domain = c(-.05, .05)
     )
   ) %>% 
-  tab_footnote(
-    footnote = md("Data from [Yahoo Finance](https://finance.yahoo.com/) via the [tidyquant](https://business-science.github.io/tidyquant/) R package."),
-    locations = cells_column_labels(columns = vars(adjusted))
+  tab_source_note(
+    source_note = md("Data from [Yahoo Finance](https://finance.yahoo.com/) via the [tidyquant](https://business-science.github.io/tidyquant/) R package.")
   ) %>% 
   tab_options(
     table.width = pct(90)
