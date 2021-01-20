@@ -13,9 +13,9 @@ The `gt` package is a brilliant new R package for building static tables. `gt` g
 knitr::opts_chunk$set(message = FALSE, warning = FALSE, comment = NA)
 
 library(gt)
-library(tidyquant)
-library(timetk)
+library(reactable)
 library(tidyverse)
+library(tidyquant)
 ```
 
 
